@@ -1,5 +1,9 @@
 # Hosting PdfCraft for the web
 
+For a verified release hosted privately with Docker and Tailscale, see
+[`../tailscale/README.md`](../tailscale/README.md). The installer works on Windows,
+Linux and macOS; the same folder includes an Unraid deployment helper.
+
 `pdfcraft-web-<version>.zip` (from the GitHub release, or `packaging/web/package.sh`) holds a
 static site in `pdfcraft-web-<version>/`:
 
