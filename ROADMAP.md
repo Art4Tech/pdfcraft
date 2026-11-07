@@ -1,5 +1,7 @@
 # PdfCraft roadmap
 
+> **Last reviewed:** 2026-11-07 | **Last updated:** 2026-11-07 | **Change:** patch (M3: seven-app Unraid installer with private Artcraft dashboard, host-generated controls and local installer kit; product estimates unchanged)
+
 > **Last reviewed:** 2026-11-03 | **Last updated:** 2026-11-03 | **Change:** patch (M5 #5850 review: indirect typewriter intent and composer edits preserve outer whitespace; movement regression commits by outside click; estimates unchanged)
 
 > **Last reviewed:** 2026-11-03 | **Last updated:** 2026-11-03 | **Change:** patch (M5 #5850: Enter adds Fill & Sign line breaks; outside clicks commit, Escape cancels, and saved multiline appearances retain their text and height; estimates unchanged)
@@ -229,6 +231,8 @@ Ranked; detail and the full milestone table in [docs/roadmap.md](docs/roadmap.md
 | 8 | 1.0 polish: performance, right-to-left, missing languages, keyboard-only (M14) | 55–95 |
 
 ## Progress log
+
+- 2026-11-07 — M3: seven-app Unraid dashboard installer and local kit; generated host registry, preserved VectorCraft ports, 13 installer tests and 10 dashboard tests pass. Linux build checked; live Unraid unverified.
 
 - 2026-11-06 (M3, Unraid hosting): one installer now prepares PdfCraft, PhotoCraft, VectorCraft and CADCraft, checks all endpoints before changing services, and documents Windows VM access. Verified-module mirroring repairs the pinned PhotoCraft loader; seven installer checks pass on Windows/Linux and all four browser interfaces start from Linux-hosted artifacts. Live Unraid remains unverified; product estimates unchanged.
 

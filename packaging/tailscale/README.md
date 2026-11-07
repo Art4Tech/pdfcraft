@@ -5,7 +5,7 @@ small static nginx image, and gives it a private Tailscale HTTPS address. It run
 on Windows, Linux and macOS with Python 3.9 or newer. No Rust build is required.
 
 The default app is PdfCraft. The same installer can also host TextureCraft,
-CADCraft, PhotoCraft and VectorCraft using `--app`.
+CADCraft, PhotoCraft, VectorCraft, FilmCraft and SolidCraft using `--app`.
 
 ## Set up another computer or network
 
@@ -93,70 +93,123 @@ Release versions/checksums and the nginx image digest are deliberately pinned in
 `RELEASES`, and rerun. The application source checkout is not built or altered.
 PhotoCraft's compressed `.part-*` files are served byte-for-byte; loaders with
 stable names revalidate instead of being cached forever. The pinned PhotoCraft
-v0.20.2 release also needs its verified root `snippets/` mirrored into
+release may also need its verified root `snippets/` mirrored into
 `app/snippets/` for the nested loader to start; `configure_site` does this only
 when the nested folder is absent. Generated JS and WebAssembly are unchanged.
 This is a hosting workaround for [upstream packaging PR #10248](https://github.com/storytold/photocraft/pull/10248).
 
-## Unraid: PdfCraft, PhotoCraft, VectorCraft and CADCraft
+## Unraid: dashboard and seven Artcraft apps
 
-`setup-unraid.sh` prepares all four apps using a pinned Python container, so
-Python does not need to be installed on Unraid. It requires Docker, Compose v2
-(for example through [Compose Manager Plus](https://github.com/mstrhakr/compose_plugin#installation)), and a connected **host** Tailscale plugin
-with MagicDNS and HTTPS available. Run it in the Unraid host's terminal, not inside
-its VM or another container:
+`setup-unraid.sh` installs the Artcraft dashboard plus PdfCraft, TextureCraft,
+CADcraft, PhotoCraft, VectorCraft, FilmCraft and SolidCraft. A pinned Python
+container prepares the files, so Python and Git are not required on Unraid.
+The dashboard offers app links, running/stopped status, CPU/memory readings,
+activity history, and Start/Stop controls for each editor.
+
+### Install on the host
+
+1. Enable Docker on Unraid. Install Docker Compose v2 if `docker compose version`
+   is unavailable (for example through [Compose Manager Plus](https://github.com/mstrhakr/compose_plugin#installation)).
+   Connect the **host** Tailscale plugin to the same tailnet as the Windows VMs.
+   MagicDNS and HTTPS must be enabled. Tailnet access rules must allow all eight
+   HTTPS ports below.
+2. Extract the provided `artcraft-unraid-installer.zip` and copy the entire
+   `artcraft-unraid-installer` folder to the Unraid host, for example under
+   `/mnt/user/appdata/`. Keep `install.py`, `unraid.py`, `setup-unraid.sh`, and
+   `artcraft-dashboard-source.zip` together. The dashboard bundle is a local
+   private artifact, separate from this public repository.
+3. Run in the Unraid host terminal, rather than in a VM or another container:
+
+   ```sh
+   bash /mnt/user/appdata/artcraft-unraid-installer/setup-unraid.sh
+   ```
+
+4. After installation completes, open the printed dashboard URL in Edge or Chrome
+   on each Windows VM. Bookmark `https://<unraid-host>.<tailnet>.ts.net:7443/`.
+   Use Open to launch an editor, and Start/Stop to manage its service. No Docker
+   or Craft installation is needed inside either Windows VM.
+
+The default deployment directory is `/mnt/user/appdata/craft-web`; pass another
+absolute path as the script's first argument if needed. Dashboard settings use
+this host's actual Tailscale name and generated container names. The two VMs can
+work concurrently in independent browser sessions. Editor work, preferences and
+files stay in each visiting browser/VM. Existing SMB shares may be used through
+browser Open/Save dialogs; the installer does not create shares or shared editing.
+The server hosts browser apps; it does not supply GPU rendering to the VMs.
+
+The dashboard controls are shared by tailnet users who can access it. Stopping an
+app affects everyone opening that app's URL on this host. The dashboard itself
+stays running so apps can be started again.
+
+| Service | Pinned release | Private HTTPS port | Host loopback port |
+| --- | --- | --- | --- |
+| Artcraft dashboard | 1.0.0 | 7443 | 18760 |
+| PdfCraft | 0.18.2 | 8443 | 18765 |
+| TextureCraft | 0.3.2 | 9443 | 18766 |
+| CADcraft | 0.18.0 | 10443 | 18767 |
+| PhotoCraft | 0.21.0 | 11443 | 18768 |
+| VectorCraft | 0.21.1 | 12443 | 18769 |
+| FilmCraft | 0.18.0 | 13443 | 18771 |
+| SolidCraft | 0.30.1 | 14443 | 18770 |
+
+VectorCraft keeps its original Unraid ports. FilmCraft uses 18771 here to avoid
+that existing local port. Tailscale Serve is persistent and private; no Funnel,
+router port forwarding, or container LAN IP is needed. All published container
+ports bind to host loopback.
+
+### Validation, security and upgrades
+
+Before changing any app, the installer verifies the local dashboard ZIP's pinned
+SHA-256, checks all eight Tailscale endpoints for conflicting services or public
+Funnel, and checks Docker port occupants. It never calls `tailscale serve reset`.
+An endpoint is rechecked immediately before configuring its proxy. App downloads
+come from SHA-256 pinned official release ZIPs (`storytold` repositories, except
+`tangency-labs/solidcraft`). Extracted releases and previous Compose files are
+kept for rollback. No app source is built or modified.
+
+The dashboard's web container has no Docker socket. A separate gateway has socket
+access only on an internal Docker network with no published port; it permits
+inspect, resource readings, start and stop for the seven exact generated app
+container names. It rejects exec/create/delete, unrelated containers and arbitrary
+Docker commands. The actual socket group is detected at installation; neither
+container runs as root. Web controls also validate Host, Origin and a request token.
+The shared dashboard requires no additional password: access follows Tailscale's
+HTTPS endpoint rules.
+
+The dashboard's named volume preserves its activity history. `unless-stopped`
+restarts running services when Docker starts after reboot and leaves deliberately
+stopped apps stopped. Keep the host Tailscale plugin connected. Rerunning the
+installer rebuilds the pinned releases, keeps history and backups, and starts
+**all seven** apps again. The Unraid host runs independently of the original host
+once the installer files have been copied.
+
+After changing installer versions, copy the matching complete kit: a dashboard
+checksum mismatch stops before app changes. To build a fresh local kit from the
+separate dashboard source repository:
 
 ```sh
-bash /path/to/pdfcraft/packaging/tailscale/setup-unraid.sh
+python3 ../artcraft-dashboard/tools/package-source.py
+python3 packaging/tailscale/make-unraid-kit.py \
+  --dashboard-source ../artcraft-dashboard/dist/artcraft-dashboard-source.zip \
+  --output ../artcraft-dashboard/dist/artcraft-unraid-installer.zip
 ```
 
-Default persistent files: `/mnt/user/appdata/craft-web`. An optional first argument
-selects another absolute directory. The script uses ordinary Docker bridge
-networks and host loopback ports, avoiding a separate LAN IP for each container.
+Review and update `BUNDLE_SHA256` in `unraid.py` only after checking any source
+bundle changes. The builder validates this checksum too. Generated kits and source
+ZIPs are ignored by Git; nothing is uploaded or served as a source download.
 
-| App | Private HTTPS port | Host loopback port |
-| --- | --- | --- |
-| PdfCraft | 8443 | 18765 |
-| CADCraft | 10443 | 18767 |
-| PhotoCraft | 11443 | 18768 |
-| VectorCraft | 12443 | 18769 |
+### Troubleshooting and service management
 
-### Install and connect Windows VMs
-
-1. In Unraid, enable Docker and install Compose Manager Plus if `docker compose
-   version` is not already available. Install/connect the host Tailscale plugin
-   through Apps / Settings if needed. The host and both Windows 11 VMs must be
-   connected to the same tailnet.
-2. Put `install.py` and `setup-unraid.sh` from this directory together in a
-   persistent folder on the Unraid host. Python and Git are not required on the
-   host; Docker runs the pinned Python image for release preparation.
-3. Run `bash /absolute/path/to/setup-unraid.sh` in the Unraid host terminal.
-   The installer checks all four HTTPS endpoints before installing any apps,
-   then prints the host-specific links and saves them in
-   `/mnt/user/appdata/craft-web/app-urls.txt`.
-4. On **each** Windows VM, leave Tailscale connected and open the same four links
-   in Edge or Chrome. Bookmark them. There is no app or Docker installation to
-   perform inside either VM. Existing tailnet access rules must permit the four
-   HTTPS ports in the table above.
-
-Both VMs can use the apps at the same time in independent browser sessions. Files
-and preferences stay with the visiting browser/VM. Existing Windows-accessible
-SMB shares can be used through the browser's Open/Save dialogs if shared project
-storage is wanted; this installer does not create or change shares.
-
-### Check and manage the host services
-
-After installation, list the saved links and check all four containers:
+The generated link list and dashboard Compose files are persistent:
 
 ```sh
 cat /mnt/user/appdata/craft-web/app-urls.txt
-for app in pdfcraft photocraft vectorcraft cadcraft; do
-  docker compose -f "/mnt/user/appdata/craft-web/$app/compose.json" ps
-done
+docker compose -f /mnt/user/appdata/craft-web/dashboard/compose.yaml ps
+docker compose -f /mnt/user/appdata/craft-web/dashboard/compose.yaml logs --tail 50
 tailscale serve status
 ```
 
-For one app, use its name instead of `pdfcraft`:
+For one editor (substitute its name for `pdfcraft`):
 
 ```sh
 docker compose -f /mnt/user/appdata/craft-web/pdfcraft/compose.json logs --tail 50
@@ -164,47 +217,11 @@ docker compose -f /mnt/user/appdata/craft-web/pdfcraft/compose.json stop
 docker compose -f /mnt/user/appdata/craft-web/pdfcraft/compose.json up -d --wait
 ```
 
-Stopping a container leaves its private Tailscale URL configured; starting it
-again restores the service at that URL. To remove the HTTPS endpoint too, use
-`tailscale serve --https=8443 off` with the port belonging to that app. Rerunning
-`setup-unraid.sh` recreates the release deployment and restores its endpoint.
-Replace the paths above if a custom deployment directory was selected. The saved
-`tailscale-serve-before.json` is a reference backup; restoring it wholesale could
-replace unrelated services changed since installation.
-
-Docker's `unless-stopped` policy restarts running containers when the host Docker
-service starts. A container deliberately stopped with `stop` stays stopped until
-started again. Check the saved links after an Unraid reboot and ensure the host
-Tailscale plugin remains connected.
-
-The Unraid host serves the application files; the VM's browser performs the work.
-The web server needs no GPU passthrough. The **browser** needs the graphics features
-required by the app, so the VM's browser/GPU configuration still matters. Web
-builds have browser file-access and feature limitations compared with native apps.
-
-If the goal is to use the server's GPU for native applications, running the native
-releases inside a VM with GPU passthrough is a separate deployment. A GUI-streaming
-container also needs a desktop/display stack and GPU support; a static web
-container does not provide those.
-
-Unraid deployment has not been tested against a live Unraid server. Release preparation, shell syntax and seven installer checks passed in Linux;
-all four interfaces started in Edge from Linux-hosted artifacts. PhotoCraft startup
-was checked after the nested-snippet repair. The installer and TextureCraft hosting
-were also exercised on Windows with Linux Docker containers. Verify the
-containers and Tailscale proxy again after an Unraid reboot. No Unraid settings,
-VM settings or GPU assignments are changed by these scripts.
-
-## Validation
-
-```sh
-python3 -m unittest discover -s packaging/tailscale -p test_install.py -v
-```
-
-The tests cover endpoint ownership, extra paths, TCP listeners, public Funnel,
-checksum mismatch, traversal, symlinks, extraction limits, and the PhotoCraft
-nested-module repair without overwriting an existing release layout. The generated nginx
-configuration is checked with `nginx -t` before a service is started.
-
-See the apps' official `packaging/web/README.md` files for browser requirements,
-and [Tailscale Serve](https://tailscale.com/docs/reference/tailscale-cli/serve) for
-private sharing and access-policy details.
+Stopping an app leaves its Tailscale URL configured; starting it restores access.
+To remove an endpoint, use only its own port, e.g. `tailscale serve --https=8443 off`.
+Do not restore `tailscale-serve-before.json` wholesale if unrelated services have
+changed since installation. If a new deployment fails, rerun the same kit after
+resolving the reported issue. Existing `compose.previous.json` files (and
+`dashboard/compose.previous.yaml`) allow manual rollback without deleting volumes.
+The installer has focused Windows and Linux preparation tests and a Linux
+Docker dashboard build; a live Unraid host deployment has not been exercised here.

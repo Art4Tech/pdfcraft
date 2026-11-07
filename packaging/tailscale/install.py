@@ -18,10 +18,16 @@ import zipfile
 RELEASES = {
     "pdfcraft": ("0.18.2", "3f2c11ae9e33d91762eaeb92a0921734a6e6cbab38c8a6a0d715fe1af73c6867"),
     "texturecraft": ("0.3.2", "df74aef4ed21df1b61478dccd719df82823967497d9bac7a6fd1ba60e785e608"),
-    "cadcraft": ("0.17.1", "dbce95f605807a04f48620de1f71112b10145de7022dc5dd37f9a8e1d6c1270c"),
-    "photocraft": ("0.20.2", "c4f712fa57ca76a84c4548681fafb734967e078304d93991840f674aa9041c3d"),
+    "cadcraft": ("0.18.0", "2440d15ebe28ce0a97f107a860f96d3bc21d98381b9f685676843b876a4d9086"),
+    "photocraft": ("0.21.0", "3cf893112507ac192c921e0223a3bd5404a24b3dcf94e7a37d43f5eba2032286"),
     "vectorcraft": ("0.21.1", "0ee84174aed234771294a0fdedf89a4f3467b34d66238d1dcf9c69d763604a80"),
 }
+RELEASES.update({
+    "filmcraft": ("0.18.0", "bc894b13f7876e49d3a4406ac6c46f4312fca3a80c83d7f80307eaf6d5b1877a"),
+    "solidcraft": ("0.30.1", "acaa73a5638206cf123c56b4c0a5113c83a8bf0149dee6a66b929b00fe444403"),
+})
+REPOSITORIES = {app: f"storytold/{app}" for app in RELEASES}
+REPOSITORIES["solidcraft"] = "tangency-labs/solidcraft"
 NGINX = "nginx@sha256:583b7f2fce1cdb8da5ad5c39ebd3c33b98b87d493190e548bdee1fa8c619c311"
 MAX_DOWNLOAD = 256 * 1024 * 1024
 MAX_EXPANDED = 768 * 1024 * 1024
@@ -150,7 +156,7 @@ def extract_release(archive, destination, prefix):
 def configure_site(site, app):
     """Prepare the hosting shell without changing generated app code or WebAssembly."""
     if app == "photocraft":
-        # v0.20.2 keeps the shared eframe module at the site root, but its app
+        # Some releases keep the shared eframe module at the site root, but its app
         # loader imports it from app/snippets (upstream PR #10248). Mirror only
         # verified release files; preserve a release's own nested snippets.
         shared = site / "snippets"
@@ -189,7 +195,7 @@ def prepare(root, app, project, local_port):
     site = context / "site"
     site.mkdir(parents=True)
     archive = context / "release.zip"
-    url = f"https://github.com/storytold/{app}/releases/download/v{version}/{app}-web-{version}.zip"
+    url = f"https://github.com/{REPOSITORIES[app]}/releases/download/v{version}/{app}-web-{version}.zip"
     print(f"Downloading {app} v{version} from its official release...", flush=True)
     download(url, archive, checksum)
     extract_release(archive, site, f"{app}-web-{version}")
