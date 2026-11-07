@@ -98,7 +98,21 @@ release may also need its verified root `snippets/` mirrored into
 when the nested folder is absent. Generated JS and WebAssembly are unchanged.
 This is a hosting workaround for [upstream packaging PR #10248](https://github.com/storytold/photocraft/pull/10248).
 
-## Unraid: dashboard and seven Artcraft apps
+## Current dashboard and app library
+
+The complete personal deployment is maintained in
+[Art4Tech/artcraft-dashboard](https://github.com/Art4Tech/artcraft-dashboard), a private
+repository accessible to its owner. Its [Unraid guide](https://github.com/Art4Tech/artcraft-dashboard/blob/main/UNRAID.md)
+uses a self-contained repository installer, includes the full app library, and
+supports installing additional verified browser releases from the dashboard.
+Use that guide for a new CorridanTower installation. No per-app repository clone
+is needed. The repository's `tools/package-source.py` exports the current v2 kit.
+
+The bundle-based installer below is retained for existing v1 installations. It
+requires its original matching dashboard source ZIP and does not gain the newer
+catalog by rebuilding with current dashboard source.
+
+## Legacy Unraid v1: dashboard and seven Artcraft apps
 
 `setup-unraid.sh` installs the Artcraft dashboard plus PdfCraft, TextureCraft,
 CADcraft, PhotoCraft, VectorCraft, FilmCraft and SolidCraft. A pinned Python
@@ -183,20 +197,11 @@ installer rebuilds the pinned releases, keeps history and backups, and starts
 **all seven** apps again. The Unraid host runs independently of the original host
 once the installer files have been copied.
 
-After changing installer versions, copy the matching complete kit: a dashboard
-checksum mismatch stops before app changes. To build a fresh local kit from the
-separate dashboard source repository:
-
-```sh
-python3 ../artcraft-dashboard/tools/package-source.py
-python3 packaging/tailscale/make-unraid-kit.py \
-  --dashboard-source ../artcraft-dashboard/dist/artcraft-dashboard-source.zip \
-  --output ../artcraft-dashboard/dist/artcraft-unraid-installer.zip
-```
-
-Review and update `BUNDLE_SHA256` in `unraid.py` only after checking any source
-bundle changes. The builder validates this checksum too. Generated kits and source
-ZIPs are ignored by Git; nothing is uploaded or served as a source download.
+The v1 helper requires the archived dashboard ZIP whose SHA-256 is pinned in
+`unraid.py`. The old kit remains valid, but current dashboard source uses its own
+installer. Use the current repository and guide above for fresh installs or the
+full catalog. `make-unraid-kit.py` remains available to repackage the original
+matching legacy bundle; it deliberately refuses a changed source checksum.
 
 ### Troubleshooting and service management
 

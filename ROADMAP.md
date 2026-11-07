@@ -1,5 +1,7 @@
 # PdfCraft roadmap
 
+> **Last reviewed:** 2026-11-07 | **Last updated:** 2026-11-07 | **Change:** patch (M3: link current private dashboard/catalog installer and Unraid guide; retain the original v1 kit for compatibility; product estimates unchanged)
+
 > **Last reviewed:** 2026-11-07 | **Last updated:** 2026-11-07 | **Change:** patch (M3: seven-app Unraid installer with private Artcraft dashboard, host-generated controls and local installer kit; product estimates unchanged)
 
 > **Last reviewed:** 2026-11-03 | **Last updated:** 2026-11-03 | **Change:** patch (M5 #5850 review: indirect typewriter intent and composer edits preserve outer whitespace; movement regression commits by outside click; estimates unchanged)
@@ -231,6 +233,8 @@ Ranked; detail and the full milestone table in [docs/roadmap.md](docs/roadmap.md
 | 8 | 1.0 polish: performance, right-to-left, missing languages, keyboard-only (M14) | 55–95 |
 
 ## Progress log
+
+- 2026-11-07: M3: direct new personal Unraid deployments to the separate dashboard repository and full app catalog guide; preserve the verified v1 bundle installer. Documentation only.
 
 - 2026-11-07 — M3: seven-app Unraid dashboard installer and local kit; generated host registry, preserved VectorCraft ports, 13 installer tests and 10 dashboard tests pass. Linux build checked; live Unraid unverified.
 
