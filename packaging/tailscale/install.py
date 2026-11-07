@@ -147,6 +147,23 @@ def extract_release(archive, destination, prefix):
         raise RuntimeError("Release does not contain a browser app (index.html and WebAssembly).")
 
 
+def configure_site(site, app):
+    """Prepare the hosting shell without changing generated app code or WebAssembly."""
+    if app == "photocraft":
+        # v0.20.2 keeps the shared eframe module at the site root, but its app
+        # loader imports it from app/snippets (upstream PR #10248). Mirror only
+        # verified release files; preserve a release's own nested snippets.
+        shared = site / "snippets"
+        nested = site / "app" / "snippets"
+        if shared.is_dir() and not nested.exists():
+            shutil.copytree(shared, nested)
+    if app == "pdfcraft":
+        html = (site / "index.html").read_text(encoding="utf-8")
+        viewport = "width=device-width, initial-scale=1"
+        if viewport in html:
+            (site / "mobile.html").write_text(html.replace(viewport, "width=1280"), encoding="utf-8")
+
+
 def default_root(app):
     if os.name == "nt":
         base = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local")))
@@ -176,11 +193,7 @@ def prepare(root, app, project, local_port):
     print(f"Downloading {app} v{version} from its official release...", flush=True)
     download(url, archive, checksum)
     extract_release(archive, site, f"{app}-web-{version}")
-    if app == "pdfcraft":
-        html = (site / "index.html").read_text(encoding="utf-8")
-        viewport = "width=device-width, initial-scale=1"
-        if viewport in html:
-            (site / "mobile.html").write_text(html.replace(viewport, "width=1280"), encoding="utf-8")
+    configure_site(site, app)
     (context / "nginx.conf").write_text(NGINX_CONF, encoding="utf-8")
     (context / "Dockerfile").write_text(
         f"FROM {NGINX}\nCOPY nginx.conf /etc/nginx/nginx.conf\nCOPY site/ /usr/share/nginx/html/\n", encoding="utf-8")

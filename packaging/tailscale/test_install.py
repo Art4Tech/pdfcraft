@@ -44,6 +44,19 @@ class InstallerSafetyTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Funnel"):
             self.validate(config)
 
+    def test_photocraft_nested_loader_finds_snippets_without_overwriting(self):
+        site = self.root / "photocraft"
+        shared = site / "snippets" / "generated-test"
+        shared.mkdir(parents=True)
+        (shared / "inline0.js").write_text("export const fixture = 1;", encoding="utf-8")
+        (site / "app").mkdir()
+        install.configure_site(site, "photocraft")
+        nested = site / "app" / "snippets" / "generated-test" / "inline0.js"
+        self.assertEqual(nested.read_bytes(), (shared / "inline0.js").read_bytes())
+        nested.write_text("export const fixture = 2;", encoding="utf-8")
+        install.configure_site(site, "photocraft")
+        self.assertEqual(nested.read_text(encoding="utf-8"), "export const fixture = 2;")
+
     def archive(self, extra=None):
         archive = self.root / "release.zip"
         with zipfile.ZipFile(archive, "w") as bundle:

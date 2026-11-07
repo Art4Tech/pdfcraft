@@ -230,6 +230,8 @@ Ranked; detail and the full milestone table in [docs/roadmap.md](docs/roadmap.md
 
 ## Progress log
 
+- 2026-11-06 (M3, Unraid hosting): one installer now prepares PdfCraft, PhotoCraft, VectorCraft and CADCraft, checks all endpoints before changing services, and documents Windows VM access. Verified-module mirroring repairs the pinned PhotoCraft loader; seven installer checks pass on Windows/Linux and all four browser interfaces start from Linux-hosted artifacts. Live Unraid remains unverified; product estimates unchanged.
+
 - 2026-11-06 (M3, deployment tooling): verified-release Docker/Tailscale installer and Unraid helper added; endpoint and archive guards pass on Windows and Linux, PdfCraft browser open/save and TextureCraft sample paint/save checked on Windows. Product parity estimates unchanged.
 
 - **2026-10-28 (M10, #4119 partial):** Scan & OCR ▸ Enhance scanned file cleans scanned pages in place: background removal (level 0–100, as the camera clean-up), edge shadow removal (book gutters, copier borders) and despeckle. Each scan image is decoded, cleaned and written back into its own object at the same size and colour space (JPEG stays JPEG, others lossless, 1-bit stays 1-bit), so the OCR text layer, comments and links stay; one undo step, shared images once, unsupported images (CMYK, indexed, JPEG 2000, JBIG2, CCITT, broken data) reported. `page_enhance_scan` drives it headlessly. Not yet an option of Recognize text. Estimates unchanged.
